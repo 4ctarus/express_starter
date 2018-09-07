@@ -6,19 +6,19 @@ const logger = require('./logger');
 
 mongoose.Promise = global.Promise;
 
-const connection = mongoose.connect(config.database.uri, {
+const connection = mongoose.connect(config.database.mongodb, {
   useNewUrlParser: true
 });
 
 connection
   .then(db => {
-    logger.info(`Successfully connected to ${config.database.uri} MongoDB cluster in ${config.env} mode.`);
+    logger.info(`Successfully connected to ${config.database.mongodb} MongoDB cluster in ${config.env} mode.`);
     return db;
   })
   .catch(err => {
     if (err.message.code === 'ETIMEDOUT') {
       logger.info('Attempting to re-establish database connection.');
-      mongoose.connect(config.database.uri, {
+      mongoose.connect(config.database.mongodb, {
         useNewUrlParser: true
       });
     } else {

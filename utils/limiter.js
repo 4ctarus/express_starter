@@ -1,4 +1,5 @@
-const client = require('redis').createClient()
+const config = require('../config');
+const client = require('redis').createClient(config.database.redis);
 
 client.on("error", function (err) {
   log.error("Error " + err);
