@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const timestamps = require('mongoose-timestamp');
 const mongooseStringQuery = require('mongoose-string-query');
+const argon2 = require('argon2');
 
 const log = require('../utils/logger');
 const email = require('../utils/email').email;
@@ -56,9 +57,26 @@ const UserSchema = mongoose.Schema({
   collection: 'users'
 });
 
+UserSchema.pre('find', function() {
+  this.where({active: true});
+});
+UserSchema.pre('findOne', function() {
+  this.where({active: true});
+});
+
 UserSchema.pre('save', function (next) {
   this.wasNew = this.isNew;
-  next();
+
+  if (!this.isModified('password')) {
+    return next();
+  }
+  
+  encrypt(this.password, {}).then(
+    hash => {
+      this.password = hash;
+      return next();
+    }
+  )
 })
 
 UserSchema.post('save', function (doc, next) {
@@ -76,9 +94,17 @@ UserSchema.post('save', function (doc, next) {
 });
 
 UserSchema.pre('findOneAndUpdate', function (next) {
-  if (!this._update.recoveryCode) {
+  this.where({active: true});
+  if (!this._update.password) {
     return next();
   }
+  
+  encrypt(this._update.password, {}).then(
+    hash => {
+      this._update.password = hash;
+      return next();
+    }
+  )
 
   /*email({
   	type: 'password',
@@ -94,9 +120,19 @@ UserSchema.pre('findOneAndUpdate', function (next) {
   	});*/
 });
 
+function encrypt(value, options) {
+  return new Promise((resolve, reject) => {
+    argon2.hash(value, options).then(hash => {
+      resolve(hash);
+    }).catch(err => {
+      resolve(null);
+    });
+  });
+}
+
 UserSchema.plugin(timestamps);
 // transform password field in hash
-UserSchema.plugin(require('./plugins/argon2_plugin'), {argon2: {}, fields: ['password']});
+//UserSchema.plugin(require('./plugins/argon2_plugin'), {argon2: {}, fields: ['password']});
 UserSchema.plugin(mongooseStringQuery);
 
 UserSchema.index({

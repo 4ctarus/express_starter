@@ -22,8 +22,13 @@ exports.list = (req, res) => {
 };
 
 exports.get = (req, res) => {
-  User.findById(req.params.userId)
+  User.findById(req.params.userId, '-password -recoveryCode -updatedAt')
     .then(user => {
+      if (!user) {
+        return res.status(404).json({
+          msg: 'user_get_404'
+        });
+      }
       res.json(user);
     })
     .catch(err => {
@@ -34,28 +39,26 @@ exports.get = (req, res) => {
 
 exports.put = (req, res) => {
   const data = req.body || {};
-
-  if (data.email && !validator.isEmail(data.email)) {
-    return res.status(422).send('Invalid email address.');
-  }
+  delete data.email;
+  delete data.password;
 
   if (data.username && !validator.isAlphanumeric(data.username)) {
     return res.status(422).send('Usernames must be alphanumeric.');
   }
 
   User.findByIdAndUpdate({
-      _id: req.params.userId
-    }, data, {
-      new: true
-    })
+        _id: req.params.userId
+      },
+      data, {
+        new: true,
+        select: '-password -recoveryCode -updatedAt'
+      })
     .then(user => {
       if (!user) {
-        return res.sendStatus(404);
+        return res.status(404).json({
+          msg: 'user_put_404'
+        });
       }
-
-      user.password = undefined;
-      user.recoveryCode = undefined;
-
       res.json(user);
     })
     .catch(err => {
@@ -81,7 +84,7 @@ exports.post = (req, res) => {
     })
     .catch(err => {
       log.error(err);
-      res.status(500).send({
+      res.status(500).json({
         msg: 'user_post_500'
       });
     });
@@ -89,7 +92,7 @@ exports.post = (req, res) => {
 
 exports.delete = (req, res) => {
   User.findByIdAndUpdate({
-      _id: req.params.user
+      _id: req.params.userId
     }, {
       active: false
     }, {
@@ -97,10 +100,12 @@ exports.delete = (req, res) => {
     })
     .then(user => {
       if (!user) {
-        return res.sendStatus(404);
+        return res.status(404).json({
+          msg: 'user_delete_404'
+        });
       }
 
-      res.sendStatus(204);
+      res.status(204).json({});
     })
     .catch(err => {
       log.error(err);

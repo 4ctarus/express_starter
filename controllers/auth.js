@@ -9,7 +9,7 @@ const log = require('../utils/logger');
 exports.login = (req, res) => {
   const data = req.body || {};
 
-  if (!data.email || !validator.isEmail(data.email)) {
+  if (!data.email || !validator.isEmail(data.email.trim())) {
     return res.status(422).send({
       msg: 'auth_login_email_422'
     });

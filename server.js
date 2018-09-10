@@ -37,7 +37,7 @@ app.use(
 app.use((err, req, res, next) => {
   if (err.name === 'UnauthorizedError') {
     res.status(401).json({
-      msg: 'Missing authentication credentials.'
+      msg: 'unauthorized'
     });
   }
 });
