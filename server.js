@@ -43,7 +43,7 @@ app.use((err, req, res, next) => {
 });
 
 // trim body
-app.use((req, res, next) => {
+/*app.use((req, res, next) => {
   if (!req.body) {
     return next();
   }
@@ -52,7 +52,7 @@ app.use((req, res, next) => {
     req.body[key] = req.body[key].trim();
   });
   next();
-});
+});*/
 
 // create server depending on protocol
 if (config.protocol.toLowerCase() == 'https') {
