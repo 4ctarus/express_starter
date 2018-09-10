@@ -11,7 +11,7 @@ exports.login = (req, res) => {
 
   if (!data.email || !validator.isEmail(data.email)) {
     return res.status(422).send({
-      msg: 'auth_login_user_422'
+      msg: 'auth_login_email_422'
     });
   }
 
@@ -25,7 +25,7 @@ exports.login = (req, res) => {
   }
 
   let query = {
-    email: validator.normalizeEmail(data.email).toLowerCase().trim()
+    email: validator.normalizeEmail(data.email)
   };
 
   User.findOne(query)

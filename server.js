@@ -20,6 +20,7 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 
+// disable spam on some route
 require('./utils/limiter')(app);
 
 let cert = fs.readFileSync('public_key.pem');
@@ -39,6 +40,18 @@ app.use((err, req, res, next) => {
       msg: 'Missing authentication credentials.'
     });
   }
+});
+
+// trim body
+app.use((req, res, next) => {
+  if (!req.body) {
+    return next();
+  }
+
+  Object.keys(req.body).map(function(key, index) {
+    req.body[key] = req.body[key].trim();
+  });
+  next();
 });
 
 // create server depending on protocol
