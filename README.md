@@ -2,6 +2,8 @@
 ### Installation
 ##### Requires [Node.js](https://nodejs.org/)  and [Redis](https://redis.io/)  to run.
 
+with aws cognito
+
 - Install the dependencies and devDependencies
 ```sh
 $ cd <folder>
