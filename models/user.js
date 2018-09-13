@@ -57,11 +57,15 @@ const UserSchema = mongoose.Schema({
   collection: 'users'
 });
 
-UserSchema.pre('find', function() {
-  this.where({active: true});
+UserSchema.pre('find', function () {
+  this.where({
+    active: true
+  });
 });
-UserSchema.pre('findOne', function() {
-  this.where({active: true});
+UserSchema.pre('findOne', function () {
+  this.where({
+    active: true
+  });
 });
 
 UserSchema.pre('save', function (next) {
@@ -70,7 +74,7 @@ UserSchema.pre('save', function (next) {
   if (!this.isModified('password')) {
     return next();
   }
-  
+
   encrypt(this.password, {}).then(
     hash => {
       this.password = hash;
@@ -94,11 +98,13 @@ UserSchema.post('save', function (doc, next) {
 });
 
 UserSchema.pre('findOneAndUpdate', function (next) {
-  this.where({active: true});
+  this.where({
+    active: true
+  });
   if (!this._update.password) {
     return next();
   }
-  
+
   encrypt(this._update.password, {}).then(
     hash => {
       this._update.password = hash;

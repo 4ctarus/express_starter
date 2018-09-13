@@ -81,6 +81,13 @@ server.on('listening', () => {
     require('./routes/' + file)(app);
   });
 
+  app.get('*', function (req, res) {
+    res.status(404).json({
+      msg: 'not_found'
+    });
+  });
+
+
   let addr = server.address();
   let bind = typeof addr === 'string' ?
     'pipe ' + addr :
