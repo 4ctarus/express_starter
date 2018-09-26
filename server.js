@@ -6,6 +6,7 @@ const jwt = require('express-jwt');
 const helmet = require('helmet');
 const https = require('https');
 const http = require('http');
+const admin = require('firebase-admin');
 
 const config = require('./config');
 const log = require('./utils/logger');
@@ -22,7 +23,7 @@ app.use(bodyParser.urlencoded({
 
 // disable spam on some route
 require('./utils/limiter')(app);
-
+/*
 let cert = fs.readFileSync('public_key.pem');
 app.use(
   jwt({
@@ -30,9 +31,10 @@ app.use(
   }).unless({
     path: [
       '/auth',
+      '/auth/signup'
     ]
   })
-);
+);*/
 
 app.use((err, req, res, next) => {
   if (err.name === 'UnauthorizedError') {
@@ -53,6 +55,14 @@ app.use((err, req, res, next) => {
   });
   next();
 });*/
+
+// add firebase admin sdk
+const serviceAccount = require('./' + config.firebase.serviceAccountKeyFile);
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://express-starter-firebase.firebaseio.com"
+});
 
 // create server depending on protocol
 if (config.protocol.toLowerCase() == 'https') {

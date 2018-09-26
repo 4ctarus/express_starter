@@ -18,5 +18,9 @@ module.exports = {
       name: process.env.EMAIL_SENDER_NAME || 'test_name',
       email: process.env.EMAIL_SENDER_EMAIL || 'test@test.fr'
     }
+  },
+
+  firebase: {
+    serviceAccountKeyFile: process.env.FIREBASE_SERVICE_ACCONT_KEY_FILE
   }
 };
