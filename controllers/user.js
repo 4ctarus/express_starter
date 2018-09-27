@@ -1,5 +1,3 @@
-const validator = require('validator');
-
 const User = require('../models/user');
 const log = require('../utils/logger');
 
@@ -67,9 +65,9 @@ exports.put = (req, res) => {
     });
 };
 
-exports.post = (req, res) => {
+exports.post = (req, res, next) => {
   let lang = 'en';
-  if (req.headers["accept-language"].includes('fr')) {
+  if (req.headers["accept-language"] && req.headers["accept-language"].includes('fr')) {
     lang = 'fr';
   }
   const data = Object.assign({}, req.body, {
@@ -83,10 +81,7 @@ exports.post = (req, res) => {
       res.json(user);
     })
     .catch(err => {
-      log.error(err);
-      res.status(500).json({
-        msg: 'user_post_500'
-      });
+      next(err);
     });
 };
 

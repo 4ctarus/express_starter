@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const timestamps = require('mongoose-timestamp');
 const mongooseStringQuery = require('mongoose-string-query');
 const argon2 = require('argon2');
+const { isEmail, isAlphanumeric } = require('validator');
 
 const log = require('../utils/logger');
 const email = require('../utils/email').email;
@@ -14,7 +15,8 @@ const UserSchema = mongoose.Schema({
     trim: true,
     index: true,
     unique: true,
-    required: true
+    required: true,
+    validate: isEmail
   },
   username: {
     type: String,
@@ -22,7 +24,8 @@ const UserSchema = mongoose.Schema({
     trim: true,
     index: true,
     unique: true,
-    required: true
+    required: true,
+    validate: isAlphanumeric
   },
   password: {
     type: String,
@@ -36,6 +39,7 @@ const UserSchema = mongoose.Schema({
   lang: {
     type: String,
     enum: ['en', 'fr'],
+    lowercase: true,
     trim: true,
     required: true,
     default: 'en'
@@ -54,7 +58,8 @@ const UserSchema = mongoose.Schema({
     default: false
   }
 }, {
-  collection: 'users'
+  collection: 'users',
+  timestamps: true
 });
 
 UserSchema.pre('find', function () {
@@ -136,14 +141,14 @@ function encrypt(value, options) {
   });
 }
 
-UserSchema.plugin(timestamps);
+//UserSchema.plugin(timestamps);
 // transform password field in hash
 //UserSchema.plugin(require('./plugins/argon2_plugin'), {argon2: {}, fields: ['password']});
 UserSchema.plugin(mongooseStringQuery);
 
-UserSchema.index({
+/*UserSchema.index({
   email: 1,
   username: 1
-});
+});*/
 
 module.exports = mongoose.model('User', UserSchema);

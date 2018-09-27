@@ -6,6 +6,9 @@ const jwt = require('express-jwt');
 const helmet = require('helmet');
 const https = require('https');
 const http = require('http');
+const {
+  ValidationError
+} = require('mongoose');
 
 const config = require('./config');
 const log = require('./utils/logger');
@@ -30,6 +33,7 @@ app.use(
   }).unless({
     path: [
       '/auth',
+      '/auth/signup'
     ]
   })
 );
@@ -87,6 +91,48 @@ server.on('listening', () => {
     });
   });
 
+  app.use(function (err, req, res, next) {
+    log.error(err);
+    let response = {};
+    let status = 500;
+
+    switch (err.name) {
+      case 'ValidationError':
+        status = 400;
+        Object.keys(err.errors).forEach(key => {
+          let element = err.errors[key];
+          let kind = element.kind;
+          let msg = element.path;
+          if (element.kind === 'user defined') {
+            kind = 'invalid';
+            //msg = element.message;
+          }
+          if (!response[kind]) {
+            response[kind] = [];
+          }
+          response[kind].push(msg);
+        });
+        break;
+      
+      /*case 'MongoError':
+        switch (err.code) {
+          case 11000:
+            status = 400;
+            response = { msg: 'already_exist' };
+            break;
+        
+          default:
+            break;
+        }
+        break;*/
+
+      default:
+        response = err;
+        break;
+    }
+
+    return res.status(status).json(response);
+  });
 
   let addr = server.address();
   let bind = typeof addr === 'string' ?
