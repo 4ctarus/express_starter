@@ -2,9 +2,10 @@ const mongoose = require('mongoose');
 const timestamps = require('mongoose-timestamp');
 const mongooseStringQuery = require('mongoose-string-query');
 const argon2 = require('argon2');
-const { isEmail, isAlphanumeric } = require('validator');
+const {
+  isEmail
+} = require('validator');
 
-const log = require('../utils/logger');
 const email = require('../utils/email').email;
 MailOptions = require('../utils/email').MailOptions;
 
@@ -25,11 +26,16 @@ const UserSchema = mongoose.Schema({
     index: true,
     unique: true,
     required: true,
-    validate: isAlphanumeric
+    match: /^[0-9a-z]+$/ // is alpha-numeric
   },
   password: {
     type: String,
-    required: true
+    required: true,
+    min: 8,
+    set: async (v) => {
+      const hash = await argon2.hash(v);
+      return hash;
+    }
   },
   name: {
     type: String,
@@ -76,8 +82,12 @@ UserSchema.pre('findOne', function () {
 UserSchema.pre('save', function (next) {
   this.wasNew = this.isNew;
 
-  if (!this.isModified('password')) {
+  /*if (!this.isModified('password')) {
     return next();
+  }
+  
+  if (this.password.length < 8) {
+    throw new Error({kind: 'invalid'});
   }
 
   encrypt(this.password, {}).then(
@@ -85,7 +95,7 @@ UserSchema.pre('save', function (next) {
       this.password = hash;
       return next();
     }
-  )
+  )*/
 })
 
 UserSchema.post('save', function (doc, next) {
@@ -106,7 +116,7 @@ UserSchema.pre('findOneAndUpdate', function (next) {
   this.where({
     active: true
   });
-  if (!this._update.password) {
+  /*if (!this._update.password) {
     return next();
   }
 
@@ -115,7 +125,7 @@ UserSchema.pre('findOneAndUpdate', function (next) {
       this._update.password = hash;
       return next();
     }
-  )
+  )*/
 
   /*email({
   	type: 'password',

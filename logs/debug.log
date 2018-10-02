@@ -1,0 +1,7 @@
+{"message":"API is now running on adresse HTTP://192.168.0.12:3000 in production mode","level":"info"}
+{"message":"Successfully connected to mongodb://localhost:27017/express_test MongoDB cluster in production mode.","level":"info"}
+{"errors":{"username":{"message":"Invalid locale '[object Object]'","name":"ValidatorError","properties":{"message":"Invalid locale '[object Object]'","type":"user defined","path":"username","value":"test12","reason":{}},"kind":"user defined","path":"username","value":"test12","reason":{},"$isValidatorError":true}},"_message":"User validation failed","message":"User validation failed: username: Invalid locale '[object Object]'","name":"ValidationError","level":"error"}
+{"message":"API is now running on adresse HTTP://192.168.0.12:3000 in production mode","level":"info"}
+{"message":"Successfully connected to mongodb://localhost:27017/express_test MongoDB cluster in production mode.","level":"info"}
+{"message":"API is now running on adresse HTTP://192.168.0.12:3000 in production mode","level":"info"}
+{"message":"Successfully connected to mongodb://localhost:27017/express_test MongoDB cluster in production mode.","level":"info"}

@@ -1,14 +1,12 @@
+const mongoose = require('mongoose');
+
 const User = require('../models/user');
 const log = require('../utils/logger');
 
 exports.list = (req, res) => {
-  const params = req.params || {};
   const query = req.query || {};
 
-  const page = parseInt(query.page, 10) || 0;
-  const perPage = parseInt(query.per_page, 10) || 10;
-
-  User.apiQuery(req.query)
+  User.apiQuery(query)
     .select('name email username')
     .then(users => {
       res.json(users);
@@ -20,6 +18,13 @@ exports.list = (req, res) => {
 };
 
 exports.get = (req, res) => {
+  // check if id is valid
+  if (!mongoose.Types.ObjectId.isValid(req.params.userId)) {
+    return res.status(400).json({
+      msg: 'user_get_400'
+    });
+  }
+
   User.findById(req.params.userId, '-password -recoveryCode -updatedAt')
     .then(user => {
       if (!user) {
@@ -35,13 +40,16 @@ exports.get = (req, res) => {
     });
 };
 
-exports.put = (req, res) => {
+exports.put = (req, res, next) => {
   const data = req.body || {};
   delete data.email;
   delete data.password;
 
-  if (data.username && !validator.isAlphanumeric(data.username)) {
-    return res.status(422).send('Usernames must be alphanumeric.');
+  // check if id is valid
+  if (!mongoose.Types.ObjectId.isValid(req.params.userId)) {
+    return res.status(400).json({
+      msg: 'user_put_400'
+    });
   }
 
   User.findByIdAndUpdate({
@@ -49,6 +57,7 @@ exports.put = (req, res) => {
       },
       data, {
         new: true,
+        runValidators: true,
         select: '-password -recoveryCode -updatedAt'
       })
     .then(user => {
@@ -60,8 +69,7 @@ exports.put = (req, res) => {
       res.json(user);
     })
     .catch(err => {
-      log.error(err);
-      res.status(422).send(err.errors);
+      next(err);
     });
 };
 
@@ -86,6 +94,13 @@ exports.post = (req, res, next) => {
 };
 
 exports.delete = (req, res) => {
+  // check if id is valid
+  if (!mongoose.Types.ObjectId.isValid(req.params.userId)) {
+    return res.status(400).json({
+      msg: 'user_delete_400'
+    });
+  }
+
   User.findByIdAndUpdate({
       _id: req.params.userId
     }, {

@@ -20,7 +20,7 @@ api.use(compression());*/
 app.use(helmet());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
-  extended: true
+  extended: false
 }));
 
 // disable spam on some route
@@ -103,7 +103,7 @@ server.on('listening', () => {
           let element = err.errors[key];
           let kind = element.kind;
           let msg = element.path;
-          if (element.kind === 'user defined') {
+          if (element.kind === 'user defined' || element.kind === 'regexp') {
             kind = 'invalid';
             //msg = element.message;
           }
@@ -114,7 +114,7 @@ server.on('listening', () => {
         });
         break;
       
-      /*case 'MongoError':
+      case 'MongoError':
         switch (err.code) {
           case 11000:
             status = 400;
@@ -124,7 +124,7 @@ server.on('listening', () => {
           default:
             break;
         }
-        break;*/
+        break;
 
       default:
         response = err;
