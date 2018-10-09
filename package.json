@@ -7,7 +7,8 @@
     "start": "node server.js",
     "dev": "NODE_ENV=development nodemon server.js 3000 --trace-sync-io",
     "prod": "NODE_ENV=production nodemon server.js 3000",
-    "mongodb": "service mongod start"
+    "mongodb": "service mongod start",
+    "test": "mocha"
   },
   "author": "HH",
   "dependencies": {
@@ -31,6 +32,8 @@
     "winston": "^3.1.0"
   },
   "devDependencies": {
-    "nodemon": "^1.18.4"
+    "mocha": "^5.2.0",
+    "nodemon": "^1.18.4",
+    "supertest": "^3.3.0"
   }
 }

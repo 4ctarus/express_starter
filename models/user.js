@@ -5,6 +5,7 @@ const argon2 = require('argon2');
 const {
   isEmail
 } = require('validator');
+var ValidationError  = mongoose.Error.ValidationError;
 
 const email = require('../utils/email').email;
 MailOptions = require('../utils/email').MailOptions;
@@ -30,12 +31,7 @@ const UserSchema = mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
-    min: 8,
-    set: async (v) => {
-      const hash = await argon2.hash(v);
-      return hash;
-    }
+    required: true
   },
   name: {
     type: String,
@@ -82,12 +78,20 @@ UserSchema.pre('findOne', function () {
 UserSchema.pre('save', function (next) {
   this.wasNew = this.isNew;
 
-  /*if (!this.isModified('password')) {
+  if (!this.isModified('password')) {
     return next();
   }
   
   if (this.password.length < 8) {
-    throw new Error({kind: 'invalid'});
+    var err = new mongoose.Error.ValidationError(null);
+    err.addError('password', new mongoose.Error.ValidatorError({ message: 'invalid' })); 
+    //return next(validationError);
+    /*err.errors = {
+      password: {
+        kind: 'user defined'
+      }
+    };*/
+    throw err;
   }
 
   encrypt(this.password, {}).then(
@@ -95,7 +99,7 @@ UserSchema.pre('save', function (next) {
       this.password = hash;
       return next();
     }
-  )*/
+  )
 })
 
 UserSchema.post('save', function (doc, next) {
@@ -116,8 +120,18 @@ UserSchema.pre('findOneAndUpdate', function (next) {
   this.where({
     active: true
   });
-  /*if (!this._update.password) {
+  if (!this._update.password) {
     return next();
+  }
+
+  if (this.password.length < 8) {
+    let err = new ValidationError({password:'***'});
+    err.errors = {
+      password: {
+        kind: 'user defined'
+      }
+    };
+    throw err;
   }
 
   encrypt(this._update.password, {}).then(
@@ -125,7 +139,7 @@ UserSchema.pre('findOneAndUpdate', function (next) {
       this._update.password = hash;
       return next();
     }
-  )*/
+  )
 
   /*email({
   	type: 'password',
