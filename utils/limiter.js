@@ -8,7 +8,7 @@ client.on("error", function (err) {
 
 module.exports = app => {
   const limiter = require('express-limiter')(app, client);
-  const auth_default_options = {
+  let auth_default_options = {
     lookup: ['connection.remoteAddress'],
     // 6 requests per minute
     total: 6,
@@ -20,6 +20,15 @@ module.exports = app => {
       })
     }
   };
+
+  if (config.env === 'development') {
+    auth_default_options = Object.assign(auth_default_options, {
+      whitelist: function (req) {
+        const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+        return ip == config.host;
+      }
+    })
+  }
 
   limiter(
     Object.assign({

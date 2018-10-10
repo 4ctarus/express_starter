@@ -93,10 +93,10 @@ server.on('listening', () => {
 
   app.use(function (err, req, res, next) {
     log.error(err);
-    let response = err;
+    let response = {};
     let status = 500;
 
-    /*switch (err.name) {
+    switch (err.name) {
       case 'ValidationError':
         status = 400;
         Object.keys(err.errors).forEach(key => {
@@ -129,7 +129,7 @@ server.on('listening', () => {
       default:
         response = err;
         break;
-    }*/
+    }
 
     return res.status(status).json(response);
   });

@@ -74,15 +74,17 @@ exports.put = (req, res, next) => {
 };
 
 exports.post = (req, res, next) => {
+  let data = req.body || {};
   let lang = 'en';
   if (req.headers["accept-language"] && req.headers["accept-language"].includes('fr')) {
     lang = 'fr';
   }
-  const data = Object.assign({}, req.body, {
-    lang: lang
-  }) || {};
 
-  User.create(data)
+  User.create(
+      Object.assign(data, {
+        lang: lang
+      })
+    )
     .then(user => {
       user.password = undefined;
       user.recoveryCode = undefined;

@@ -53,7 +53,7 @@ const UserSchema = mongoose.Schema({
   },
   active: {
     type: Boolean,
-    default: true
+    default: false
   },
   admin: {
     type: Boolean,
@@ -84,7 +84,7 @@ UserSchema.pre('save', function (next) {
   
   if (this.password.length < 8) {
     var err = new mongoose.Error.ValidationError(null);
-    err.addError('password', new mongoose.Error.ValidatorError({ message: 'invalid' })); 
+    err.addError('password', new mongoose.Error.ValidatorError({ message: 'invalid', type: 'user defined', path: 'password', value: 'value' })); 
     //return next(validationError);
     /*err.errors = {
       password: {
