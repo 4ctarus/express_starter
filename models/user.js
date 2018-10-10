@@ -104,7 +104,7 @@ UserSchema.pre('save', function (next) {
 
 UserSchema.post('save', function (doc, next) {
   if (!this.wasNew) {
-    next();
+    return next();
   }
 
   let mailOptions = new MailOptions({

@@ -32,7 +32,7 @@ before(function (done) {
 
 after(function (done) {
   mongoose.connection.close(function () {
-    console.log('mongoose close');
+    logger.info('mongoose close');
     //process.exit(0);
     done();
   });

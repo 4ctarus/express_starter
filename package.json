@@ -8,7 +8,9 @@
     "dev": "service mongod start && NODE_ENV=development nodemon server.js 3000 --trace-sync-io",
     "prod": "NODE_ENV=production nodemon server.js 3000",
     "mongodb": "service mongod start",
-    "test": "mocha"
+    "test": "mocha",
+    "test_signup": "mocha --grep Signup",
+    "test_user": "mocha --grep User"
   },
   "author": "HH",
   "dependencies": {

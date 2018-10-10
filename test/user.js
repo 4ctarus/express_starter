@@ -9,32 +9,19 @@ const url = `${config.protocol}://${config.host}:${config.port}`;
 const api = supertest(url.toLowerCase());
 
 describe('User', function () {
-  var test;
+  var test_user;
 
   before(function (done) {
-    api.post('/auth/signup')
-      .set('Accept', 'application/x-www-form-urlencoded')
-      .send({
-        email: 'test@test.com',
-        password: '12345678',
-        name: 'test',
-        username: 'test'
-      })
-      .expect('Content-Type', /json/)
-      .expect(200, {
-        email: 'test@test.com',
-        name: 'test',
-        username: 'test'
-      })
-      .end(function (err, res) {
-        expect(res.body).to.not.have.property('password');
-        expect(res.body).to.have.property('active');
-        expect(res.body.active).to.not.equal(true);
-        expect(res.body).to.have.property('admin');
-        expect(res.body.admin).to.not.equal(true);
-        test = res.body;
-        done();
-      });
+    test_user = new User({
+      email: 'test@test.com',
+      password: '12345678',
+      name: 'test',
+      username: 'test'
+    });
+    test_user.save(function (err) {
+      if (err) console.log(err);
+      done();
+    });
   });
 
   after(function (done) {
@@ -63,20 +50,11 @@ describe('User', function () {
   });
 
   it('active user', function (done) {
-    User.findByIdAndUpdate(user._id, {
-        active: true
-      }, {
-        new: true,
-        select: '-password -recoveryCode -updatedAt'
-      })
-      .then(res => {
-        console.log('user', res, user);
-        done();
-      })
-      .catch(err => {
-        console.log('err', err);
-        done();
-      });
+    test_user.active = true;
+    test_user.save(function (err) {
+      if (err) console.log(err);
+      done();
+    });
   });
 
   it('login', function (done) {
