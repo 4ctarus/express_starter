@@ -12,6 +12,9 @@
     "test_signup": "mocha --grep Signup",
     "test_user": "mocha --grep User"
   },
+  "nodemonConfig": {
+    "ignore": ["test/*", "docs/*"]
+  },
   "author": "HH",
   "dependencies": {
     "argon2": "^0.19.3",

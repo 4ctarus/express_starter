@@ -15,7 +15,6 @@ describe('Signup', function () {
     User.deleteOne({
       email: 'test@test.com'
     }, (err) => {
-      console.log('error', err);
       done();
     });
   });
