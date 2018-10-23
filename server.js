@@ -7,16 +7,12 @@ const helmet = require('helmet');
 const https = require('https');
 const http = require('http');
 const mongoose = require('mongoose');
-const redis = require("redis");
 
 const config = require('./config');
 const log = require('./utils/logger');
+const { getAsync, setSync } = require('./utils/redis_util')
 const User = require('./models/user');
 
-const client = redis.createClient(config.database.redis);
-client.on("error", function (err) {
-  log.error("Error " + err);
-});
 const app = express();
 
 /*api.use(cors());
@@ -44,13 +40,9 @@ app.use(
   })
 );
 
-/*app.use((req, res, next) => {
-  console.log('user', req.jwt);
-  next();
-});*/
 // get user from redis or db depending on 
 app.use(function (req, res, next) {
-  //TODO: add logged user in redis and get it from dat
+  // TODO: add redis to utils and promisify
   if (req.jwt) {
     if (!mongoose.Types.ObjectId.isValid(req.jwt.sub)) {
       let err = new Error('invalid sub id');
@@ -58,11 +50,13 @@ app.use(function (req, res, next) {
       return next(err);
     }
     // get user from redis
-    client.get(req.jwt.sub, function (err, obj) {
-      if (obj) {
-        req.user = obj;
+    getAsync(req.jwt.sub).then(function(res) {
+      if (res) {
+        log.debug('from redis: ' + res);
+        req.user = JSON.parse(res);
         return next();
       }
+
       // else get it from db and add it to redis
       User.findById(req.jwt.sub, '-password -recoveryCode -updatedAt')
         .then(user => {
@@ -70,7 +64,8 @@ app.use(function (req, res, next) {
             let err = new Error('no user found');
             err.name = 'UnauthorizedError';
           }
-          client.set(req.jwt.sub, JSON.stringify(user), 'EX', 60);
+          setSync(req.jwt.sub, JSON.stringify(user), 'EX', 60);
+          log.debug('from db: ' + user);
           req.user = user;
           next();
         })
@@ -82,6 +77,14 @@ app.use(function (req, res, next) {
   } else {
     next();
   }
+});
+
+app.use((req, res, next) => {
+  // authorisation middleware
+  // TODO: depending on role set access or not
+  console.log('url', req.path);
+  console.log('role', req.user);
+  next();
 });
 
 app.use((err, req, res, next) => {
