@@ -6,13 +6,17 @@ const jwt = require('express-jwt');
 const helmet = require('helmet');
 const https = require('https');
 const http = require('http');
-const {
-  ValidationError
-} = require('mongoose');
+const mongoose = require('mongoose');
+const redis = require("redis");
 
 const config = require('./config');
 const log = require('./utils/logger');
+const User = require('./models/user');
 
+const client = redis.createClient(config.database.redis);
+client.on("error", function (err) {
+  log.error("Error " + err);
+});
 const app = express();
 
 /*api.use(cors());
@@ -29,34 +33,72 @@ require('./utils/limiter')(app);
 let cert = fs.readFileSync('public_key.pem');
 app.use(
   jwt({
-    secret: cert
+    secret: cert,
+    requestProperty: 'jwt'
   }).unless({
     path: [
+      // public path
       '/auth',
       '/auth/signup'
     ]
   })
 );
 
-app.use((err, req, res, next) => {
-  if (err.name === 'UnauthorizedError') {
-    res.status(401).json({
-      msg: 'unauthorized'
+/*app.use((req, res, next) => {
+  console.log('user', req.jwt);
+  next();
+});*/
+// get user from redis or db depending on 
+app.use(function (req, res, next) {
+  //TODO: add logged user in redis and get it from dat
+  if (req.jwt) {
+    if (!mongoose.Types.ObjectId.isValid(req.jwt.sub)) {
+      let err = new Error('invalid sub id');
+      err.name = 'UnauthorizedError';
+      return next(err);
+    }
+    // get user from redis
+    client.get(req.jwt.sub, function (err, obj) {
+      if (obj) {
+        req.user = obj;
+        return next();
+      }
+      // else get it from db and add it to redis
+      User.findById(req.jwt.sub, '-password -recoveryCode -updatedAt')
+        .then(user => {
+          if (!user) {
+            let err = new Error('no user found');
+            err.name = 'UnauthorizedError';
+          }
+          client.set(req.jwt.sub, JSON.stringify(user), 'EX', 60);
+          req.user = user;
+          next();
+        })
+        .catch(err => {
+          log.error(err);
+          return next(err);
+        });
     });
+  } else {
+    next();
   }
 });
 
-// trim body
-/*app.use((req, res, next) => {
-  if (!req.body) {
-    return next();
-  }
+app.use((err, req, res, next) => {
+  if (err) {
+    let status = 500;
+    let msg = err.toString();
+    if (err.name === 'UnauthorizedError') {
+      status = 401;
+    }
 
-  Object.keys(req.body).map(function(key, index) {
-    req.body[key] = req.body[key].trim();
-  });
-  next();
-});*/
+    return res.status(status).json({
+      msg: msg
+    });
+  } else {
+    next();
+  }
+});
 
 // create server depending on protocol
 if (config.protocol.toLowerCase() == 'https') {
@@ -113,14 +155,16 @@ server.on('listening', () => {
           response[kind].push(msg);
         });
         break;
-      
+
       case 'MongoError':
         switch (err.code) {
           case 11000:
             status = 400;
-            response = { msg: 'already_exist' };
+            response = {
+              msg: 'already_exist'
+            };
             break;
-        
+
           default:
             break;
         }

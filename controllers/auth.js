@@ -46,10 +46,11 @@ exports.login = (req, res) => {
         // create user token
         let cert = fs.readFileSync('private_key.pem');
         let token = jwt.sign({
-          sub: user._id
+          sub: user._id,
+          admin: false
         }, cert, {
           algorithm: 'RS256',
-          expiresIn: '7d'
+          expiresIn: '2d'
         });
 
         user.password = undefined;
