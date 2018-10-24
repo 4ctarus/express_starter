@@ -8,6 +8,7 @@ exports.list = (req, res) => {
 
   User.apiQuery(query)
     .select('name email username')
+    .populate('role', 'name')
     .then(users => {
       res.json(users);
     })
@@ -26,6 +27,7 @@ exports.get = (req, res) => {
   }
 
   User.findById(req.params.userId, '-password -recoveryCode -updatedAt')
+    .populate('role', 'name')
     .then(user => {
       if (!user) {
         return res.status(404).json({
@@ -44,6 +46,7 @@ exports.put = (req, res, next) => {
   const data = req.body || {};
   delete data.email;
   delete data.password;
+  delete data.role;
 
   // check if id is valid
   if (!mongoose.Types.ObjectId.isValid(req.params.userId)) {
@@ -60,6 +63,7 @@ exports.put = (req, res, next) => {
         runValidators: true,
         select: '-password -recoveryCode -updatedAt'
       })
+    .populate('role', 'name')
     .then(user => {
       if (!user) {
         return res.status(404).json({
@@ -75,6 +79,7 @@ exports.put = (req, res, next) => {
 
 exports.post = (req, res, next) => {
   let data = req.body || {};
+  delete data.role;
   let lang = 'en';
   if (req.headers["accept-language"] && req.headers["accept-language"].includes('fr')) {
     lang = 'fr';
@@ -122,5 +127,36 @@ exports.delete = (req, res) => {
     .catch(err => {
       log.error(err);
       res.status(422).send(err.errors);
+    });
+};
+
+exports.setRole = (req, res) => {
+  // check if id is valid
+  if (req.body.role && !mongoose.Types.ObjectId.isValid(req.params.userId)) {
+    return res.status(400).json({
+      msg: 'user_setrole_400'
+    });
+  }
+
+  User.findByIdAndUpdate({
+      _id: req.params.userId
+    }, {
+      role: req.body.role
+    }, {
+      new: true,
+      runValidators: true,
+      select: '-password -recoveryCode -updatedAt'
+    })
+    .populate('role', 'name')
+    .then(user => {
+      if (!user) {
+        return res.status(404).json({
+          msg: 'user_setrole_400'
+        });
+      }
+      res.json(user);
+    })
+    .catch(err => {
+      next(err);
     });
 };

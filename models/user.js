@@ -1,11 +1,9 @@
 const mongoose = require('mongoose');
-const timestamps = require('mongoose-timestamp');
 const mongooseStringQuery = require('mongoose-string-query');
 const argon2 = require('argon2');
 const {
   isEmail
 } = require('validator');
-var ValidationError  = mongoose.Error.ValidationError;
 
 const email = require('../utils/email').email;
 MailOptions = require('../utils/email').MailOptions;
@@ -55,9 +53,9 @@ const UserSchema = mongoose.Schema({
     type: Boolean,
     default: false
   },
-  admin: {
-    type: Boolean,
-    default: false
+  role: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Role'
   }
 }, {
   collection: 'users',
@@ -85,12 +83,6 @@ UserSchema.pre('save', function (next) {
   if (this.password.length < 8) {
     var err = new mongoose.Error.ValidationError(null);
     err.addError('password', new mongoose.Error.ValidatorError({ message: 'invalid', type: 'user defined', path: 'password', value: 'value' })); 
-    //return next(validationError);
-    /*err.errors = {
-      password: {
-        kind: 'user defined'
-      }
-    };*/
     throw err;
   }
 
@@ -125,12 +117,8 @@ UserSchema.pre('findOneAndUpdate', function (next) {
   }
 
   if (this.password.length < 8) {
-    let err = new ValidationError({password:'***'});
-    err.errors = {
-      password: {
-        kind: 'user defined'
-      }
-    };
+    var err = new mongoose.Error.ValidationError(null);
+    err.addError('password', new mongoose.Error.ValidatorError({ message: 'invalid', type: 'user defined', path: 'password', value: 'value' })); 
     throw err;
   }
 

@@ -10,7 +10,8 @@ const mongoose = require('mongoose');
 
 const config = require('./config');
 const log = require('./utils/logger');
-const { getAsync, setSync } = require('./utils/redis_util')
+const { getAsync, setSync } = require('./utils/redis_util');
+const permission = require('./utils/permission');
 const User = require('./models/user');
 
 const app = express();
@@ -83,7 +84,7 @@ app.use((req, res, next) => {
   // authorisation middleware
   // TODO: depending on role set access or not
   console.log('url', req.path);
-  console.log('role', req.user);
+  console.log('role', req.user.role);
   next();
 });
 
@@ -130,6 +131,9 @@ server.on('listening', () => {
     require('./routes/' + file)(app);
   });
 
+  /* init permissions in redis */
+  permission.init();
+
   app.get('*', function (req, res) {
     res.status(404).json({
       msg: 'not_found'
@@ -171,6 +175,13 @@ server.on('listening', () => {
           default:
             break;
         }
+        break;
+
+      case 'Forbidden':
+        status = 403;
+        response = {
+          msg: err.message
+        };
         break;
 
       default:

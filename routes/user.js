@@ -6,4 +6,6 @@ module.exports = app => {
     .get(User.get)
     .put(User.put)
     .delete(User.delete);
+  app.route('/users/:userId/role')
+    .put(User.setRole);
 };
