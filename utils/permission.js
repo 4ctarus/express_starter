@@ -22,25 +22,28 @@ exports.add = () => {
 
 };
 
-exports.isAllowed = (req, res, next, method, path) => {
-  const role = req.user.role;
-  hgetallAsync(`perm:${method}:${role}`).then(function (result) {
-    log.debug('actual user permissions', result);
-  }).catch(err => {
-    log.error(err);
-    return next(err);
-  });
+exports.isAllowed = (path) => {
+  return (req, res, next) => {
+    const method = req.method.toLowerCase();
+    const role = req.user.role;
+    hgetallAsync(`perm:${method}:${role}`).then(function (result) {
+      log.debug('actual user permissions', result);
+    }).catch(err => {
+      log.error(err);
+      return next(err);
+    });
 
-  hgetAsync(`perm:${method}:${role}`, path).then(function (res) {
-    if (!res) {
-      let err = new Error('Forbidden');
-      err.name = 'Forbidden'
-      next(err);
-    } else {
-      next();
-    }
-  }).catch(err => {
-    log.error(err);
-    return next(err);
-  });
+    hgetAsync(`perm:${method}:${role}`, path).then(function (res) {
+      if (!res) {
+        let err = new Error('Forbidden');
+        err.name = 'Forbidden'
+        next(err);
+      } else {
+        next();
+      }
+    }).catch(err => {
+      log.error(err);
+      return next(err);
+    });
+  }
 };
