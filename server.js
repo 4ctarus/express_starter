@@ -10,7 +10,11 @@ const mongoose = require('mongoose');
 
 const config = require('./config');
 const log = require('./utils/logger');
-const { getAsync, setSync } = require('./utils/redis_util');
+const {
+  hmsetASync,
+  hgetallAsync,
+  setexAsync
+} = require('./utils/redis_util');
 const permission = require('./utils/permission');
 const User = require('./models/user');
 
@@ -51,10 +55,10 @@ app.use(function (req, res, next) {
       return next(err);
     }
     // get user from redis
-    getAsync(req.jwt.sub).then(function(res) {
-      if (res) {
-        log.debug('from redis: ' + res);
-        req.user = JSON.parse(res);
+    hgetallAsync(`user:${req.jwt.sub}`).then(function (user) {
+      if (user) {
+        log.debug('from redis', typeof user);
+        req.user = user;
         return next();
       }
 
@@ -65,7 +69,12 @@ app.use(function (req, res, next) {
             let err = new Error('no user found');
             err.name = 'UnauthorizedError';
           }
-          setSync(req.jwt.sub, JSON.stringify(user), 'EX', 60);
+
+          hmsetASync(`user:${req.jwt.sub}`, user).then((err, result) => {
+            if (!err) {
+              setexAsync(`user:${req.jwt.sub}`, 60);
+            }
+          });
           log.debug('from db: ' + user);
           req.user = user;
           next();
@@ -78,14 +87,6 @@ app.use(function (req, res, next) {
   } else {
     next();
   }
-});
-
-app.use((req, res, next) => {
-  // authorisation middleware
-  // TODO: depending on role set access or not
-  console.log('url', req.path);
-  console.log('role', req.user.role);
-  next();
 });
 
 app.use((err, req, res, next) => {

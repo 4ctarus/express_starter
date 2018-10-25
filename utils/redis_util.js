@@ -9,9 +9,9 @@ client.on("error", function (err) {
   log.error("Error " + err);
 });
 
-exports.getAsync = promisify(client.get).bind(client);
-exports.keysAsync = promisify(client.keys).bind(client);
-exports.setSync = client.set.bind(client);
-
-exports.hkeysAsync = promisify(client.hkeys).bind(client);
 exports.hsetSync = client.hset.bind(client);
+exports.hmsetASync = promisify(client.HMSET).bind(client);
+exports.hgetAsync = promisify(client.hget).bind(client);
+exports.hgetallAsync = promisify(client.hgetall).bind(client);
+
+exports.setexAsync = promisify(client.setex).bind(client);

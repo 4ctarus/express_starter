@@ -1,17 +1,18 @@
+const log = require('../utils/logger');
 const PathModel = require('../models/path');
 const {
   hsetSync,
-  getAsync,
-  hkeysAsync
+  hgetAsync,
+  hgetallAsync
 } = require('./redis_util');
 
 exports.init = () => {
   PathModel.find({}, function (err, paths) {
-    console.log(paths);
+    log.info('Server init permissions');
 
     paths.forEach(path => {
       path.role.forEach(role => {
-        hsetSync(path.method + ':' + path.path + ':' + role, '', '1');
+        hsetSync(`perm:${path.method}:${role}`, path.path, 1);
       });
     });
   });
@@ -22,17 +23,15 @@ exports.add = () => {
 };
 
 exports.isAllowed = (req, res, next, method, path) => {
-  hkeysAsync('*').then(function (res) {
-    console.log('perm', res);
+  const role = req.user.role;
+  hgetallAsync(`perm:${method}:${role}`).then(function (result) {
+    log.debug('actual user permissions', result);
+  }).catch(err => {
+    log.error(err);
+    return next(err);
   });
 
-  let err = new Error('Forbidden');
-  err.name = 'Forbidden'
-  return next(err);
-
-  const role = req.user.role;
-  getAsync(method + ':' + path + ':' + role).then(function (res) {
-    console.log(res);
+  hgetAsync(`perm:${method}:${role}`, path).then(function (res) {
     if (!res) {
       let err = new Error('Forbidden');
       err.name = 'Forbidden'
@@ -41,7 +40,7 @@ exports.isAllowed = (req, res, next, method, path) => {
       next();
     }
   }).catch(err => {
-    console.log('err', err);
+    log.error(err);
     return next(err);
   });
 };
