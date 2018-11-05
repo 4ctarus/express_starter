@@ -4,7 +4,7 @@
   "description": "express api starter",
   "private": true,
   "scripts": {
-    "start": "node server.js",
+    "start": "NODE_ENV=development nodemon server.js 3000 --trace-sync-io",
     "dev": "service mongod start && NODE_ENV=development nodemon server.js 3000 --trace-sync-io",
     "prod": "NODE_ENV=production nodemon server.js 3000",
     "mongodb": "service mongod start",
