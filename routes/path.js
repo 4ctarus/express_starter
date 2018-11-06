@@ -31,9 +31,7 @@ module.exports = app => {
     .get(permission.isAllowed('/paths/:id'),
       base.get(PathModel))
     .put(permission.isAllowed('/paths/:id'),
-      base.put(PathModel, {
-        select: '-updatedAt -createdAt'
-      }))
+      base.put(PathModel))
     .delete(permission.isAllowed('/paths/:id'),
       base.delete(PathModel));
 };
